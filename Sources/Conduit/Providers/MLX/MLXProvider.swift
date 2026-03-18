@@ -514,7 +514,7 @@ public actor MLXProvider: AIProvider, TextGenerator, TokenCounter {
         for model: ModelID
     ) async throws -> TokenCount {
         #if arch(arm64)
-        await applyRuntimeConfigurationIfNeeded()
+        try await applyRuntimeConfigurationIfNeeded()
 
         // Validate model type
         guard case .mlx(let modelId) = model else {
@@ -547,7 +547,7 @@ public actor MLXProvider: AIProvider, TextGenerator, TokenCounter {
         for model: ModelID
     ) async throws -> TokenCount {
         #if arch(arm64)
-        await applyRuntimeConfigurationIfNeeded()
+        try await applyRuntimeConfigurationIfNeeded()
 
         // Validate model type
         guard case .mlx(let modelId) = model else {
@@ -650,7 +650,7 @@ extension MLXProvider {
             throw AIError.invalidInput("MLXProvider only supports .mlx() models")
         }
 
-        await applyRuntimeConfigurationIfNeeded()
+        try await applyRuntimeConfigurationIfNeeded()
 
         // Load model container
         let container = try await modelLoader.loadModel(identifier: model)
@@ -721,7 +721,7 @@ extension MLXProvider {
             // Reset cancellation flag
             isCancelled = false
 
-            await applyRuntimeConfigurationIfNeeded()
+            try await applyRuntimeConfigurationIfNeeded()
 
             // Load model container
             let container = try await modelLoader.loadModel(identifier: model)
@@ -830,11 +830,12 @@ extension MLXProvider {
 
     // MARK: - Runtime Configuration
 
-    private func applyRuntimeConfigurationIfNeeded() async {
+    private func applyRuntimeConfigurationIfNeeded() async throws {
         guard !didApplyRuntimeConfiguration else { return }
         await MLXModelCache.shared.apply(configuration: configuration.cacheConfiguration())
 
         #if arch(arm64)
+        try MLXMetalLibraryBootstrap.ensureAvailable()
         let resolvedLimit = MLXRuntimeMemoryLimit.resolved(from: configuration)
         MLX.GPU.set(memoryLimit: resolvedLimit)
         #endif

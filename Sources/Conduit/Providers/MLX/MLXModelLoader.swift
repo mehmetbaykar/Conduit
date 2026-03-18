@@ -99,7 +99,7 @@ internal actor MLXModelLoader {
             throw AIError.invalidInput("MLXModelLoader only supports .mlx() model identifiers")
         }
 
-        applyRuntimeConfiguration()
+        try applyRuntimeConfiguration()
 
         // Check cache first
         if let cached = await MLXModelCache.shared.get(modelId) {
@@ -111,9 +111,9 @@ internal actor MLXModelLoader {
         // Detect model capabilities using VLMDetector
         let capabilities = await VLMDetector.shared.detectCapabilities(identifier)
 
-        // Create MLX configuration using model ID
-        // mlx-swift-lm handles downloading and caching internally via HuggingFace Hub
-        let modelConfig = ModelConfiguration(id: modelId)
+        // Prefer a locally cached Hugging Face snapshot when present so local MLX
+        // inference works offline and doesn't stall on Hub resolution.
+        let modelConfig = localModelConfiguration(for: modelId) ?? ModelConfiguration(id: modelId)
 
         // Load the model using the appropriate factory based on capabilities
         do {
@@ -167,7 +167,8 @@ internal actor MLXModelLoader {
     ///
     /// MLX GPU memory limits are global process-level settings, so this is
     /// applied opportunistically before model loading.
-    private func applyRuntimeConfiguration() {
+    private func applyRuntimeConfiguration() throws {
+        try MLXMetalLibraryBootstrap.ensureAvailable()
         let resolvedLimit = MLXRuntimeMemoryLimit.resolved(from: configuration)
         MLX.GPU.set(memoryLimit: resolvedLimit)
     }
@@ -297,6 +298,60 @@ internal actor MLXModelLoader {
         return .gigabytes(2)
     }
     #endif
+
+    private func localModelConfiguration(for modelId: String) -> ModelConfiguration? {
+        let fileManager = FileManager.default
+        let sanitized = modelId.replacingOccurrences(of: "/", with: "--")
+        let roots = [
+            NSString(string: "~/.cache/huggingface/hub/models--\(sanitized)").expandingTildeInPath,
+            NSString(string: "~/Library/Caches/huggingface/hub/models--\(sanitized)").expandingTildeInPath,
+            NSString(string: "~/Library/Caches/Conduit/Models/mlx/\(sanitized)").expandingTildeInPath
+        ]
+
+        for rootPath in roots {
+            let rootURL = URL(fileURLWithPath: rootPath, isDirectory: true)
+            if let snapshot = preferredSnapshotDirectory(in: rootURL, fileManager: fileManager) {
+                return ModelConfiguration(directory: snapshot)
+            }
+        }
+
+        return nil
+    }
+
+    private func preferredSnapshotDirectory(in rootURL: URL, fileManager: FileManager) -> URL? {
+        guard fileManager.fileExists(atPath: rootURL.path) else { return nil }
+
+        let refsMain = rootURL.appendingPathComponent("refs").appendingPathComponent("main")
+        if let ref = try? String(contentsOf: refsMain, encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !ref.isEmpty {
+            let snapshot = rootURL.appendingPathComponent("snapshots").appendingPathComponent(ref, isDirectory: true)
+            if fileManager.fileExists(atPath: snapshot.path) {
+                return snapshot
+            }
+        }
+
+        let snapshotsRoot = rootURL.appendingPathComponent("snapshots", isDirectory: true)
+        guard let candidates = try? fileManager.contentsOfDirectory(
+            at: snapshotsRoot,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return nil
+        }
+
+        return candidates
+            .filter { url in
+                var isDirectory: ObjCBool = false
+                return fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue
+            }
+            .sorted {
+                let lhsDate = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+                let rhsDate = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+                return lhsDate > rhsDate
+            }
+            .first
+    }
 
     /// Resolves the local file path for a model, downloading if necessary.
     ///
