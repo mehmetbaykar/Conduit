@@ -6,6 +6,7 @@
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%2017+%20|%20macOS%2014+%20|%20visionOS%201+%20|%20Linux-007AFF.svg?style=flat)](https://developer.apple.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg?style=flat)](https://github.com/christopherkarani/Conduit/releases)
+[![Discord](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Fv10%2Finvites%2FNHgNh7HJ6M%3Fwith_counts%3Dtrue&query=%24.approximate_presence_count&suffix=%20online&logo=discord&label=Discord&color=5865F2&style=flat)](https://discord.gg/NHgNh7HJ6M)
 
 Conduit is a Swift 6.2 SDK for LLM inference across local and cloud providers. Every provider conforms to `TextGenerator`, so the same surface works whether you are calling Claude in the cloud, GPT-4o through OpenRouter, Llama on-device with MLX, or Apple's Foundation Models. Actors and `Sendable` types keep the concurrency model explicit.
 
