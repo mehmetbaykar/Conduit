@@ -164,7 +164,7 @@ extension OpenAIProvider {
             case .none:
                 // Already handled above - don't include tools
                 break
-            case .tool(let name):
+            case .named(let name):
                 body["tool_choice"] = [
                     "type": "function",
                     "function": ["name": name]
@@ -263,7 +263,7 @@ extension OpenAIProvider {
                 body["tool_choice"] = "required"
             case .none:
                 break
-            case .tool(let name):
+            case .named(let name):
                 body["tool_choice"] = [
                     "type": "function",
                     "name": name

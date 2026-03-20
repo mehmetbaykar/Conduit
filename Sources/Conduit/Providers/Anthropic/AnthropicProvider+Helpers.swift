@@ -332,7 +332,7 @@ extension AnthropicProvider {
             toolChoice = AnthropicMessagesRequest.ToolChoiceRequest(type: "auto", name: nil)
         case .required:
             toolChoice = AnthropicMessagesRequest.ToolChoiceRequest(type: "any", name: nil)
-        case .tool(let name):
+        case .named(let name):
             toolChoice = AnthropicMessagesRequest.ToolChoiceRequest(type: "tool", name: name)
         case .none:
             // Already handled above, but needed for exhaustive switch
