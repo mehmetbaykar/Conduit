@@ -77,7 +77,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
             extendedType: type,
             inheritanceClause: InheritanceClauseSyntax(
                 inheritedTypes: InheritedTypeListSyntax([
-                    InheritedTypeSyntax(type: TypeSyntax(stringLiteral: "Generable"))
+                    InheritedTypeSyntax(type: TypeSyntax(stringLiteral: "Conduit.Generable"))
                 ])
             ),
             memberBlock: MemberBlockSyntax(members: [])
@@ -347,7 +347,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
     private static func generateRawContentProperty() -> DeclSyntax {
         return DeclSyntax(
             stringLiteral: """
-                private let _rawGeneratedContent: GeneratedContent
+                private let _rawGeneratedContent: Conduit.GeneratedContent
                 """
         )
     }
@@ -357,7 +357,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
             return DeclSyntax(
                 stringLiteral: """
                     nonisolated public init() {
-                        self._rawGeneratedContent = GeneratedContent(kind: .structure(properties: [:], orderedKeys: []))
+                        self._rawGeneratedContent = Conduit.GeneratedContent(kind: .structure(properties: [:], orderedKeys: []))
                     }
                     """
             )
@@ -379,35 +379,35 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                 let baseType = String(propType.dropLast())
                 if baseType == "String" {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { GeneratedContent($0) } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { Conduit.GeneratedContent($0) } ?? Conduit.GeneratedContent(kind: .null)"
                 } else if baseType == "Int" || baseType == "Double" || baseType == "Float"
                     || baseType == "Bool" || baseType == "Decimal"
                 {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? Conduit.GeneratedContent(kind: .null)"
                 } else if isDictionaryType(baseType) {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? Conduit.GeneratedContent(kind: .null)"
                 } else if baseType.hasPrefix("[") && baseType.hasSuffix("]") {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { GeneratedContent(elements: $0) } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { Conduit.GeneratedContent(elements: $0) } ?? Conduit.GeneratedContent(kind: .null)"
                 } else {
                     return """
                         if let value = \(propName) {
                                     properties["\(propName)"] = value.generatedContent
                                 } else {
-                                    properties["\(propName)"] = GeneratedContent(kind: .null)
+                                    properties["\(propName)"] = Conduit.GeneratedContent(kind: .null)
                                 }
                         """
                 }
             } else if isDictionaryType(propType) {
                 return "properties[\"\(propName)\"] = \(propName).generatedContent"
             } else if propType.hasPrefix("[") && propType.hasSuffix("]") {
-                return "properties[\"\(propName)\"] = GeneratedContent(elements: \(propName))"
+                return "properties[\"\(propName)\"] = Conduit.GeneratedContent(elements: \(propName))"
             } else {
                 switch propType {
                 case "String":
-                    return "properties[\"\(propName)\"] = GeneratedContent(\(propName))"
+                    return "properties[\"\(propName)\"] = Conduit.GeneratedContent(\(propName))"
                 case "Int", "Double", "Float", "Bool", "Decimal":
                     return "properties[\"\(propName)\"] = \(propName).generatedContent"
                 default:
@@ -423,10 +423,10 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                 nonisolated public init(\(parameters)) {
                     \(assignments)
                     
-                    var properties: [String: GeneratedContent] = [:]
+                    var properties: [String: Conduit.GeneratedContent] = [:]
                     \(propertyConversions)
                     
-                    self._rawGeneratedContent = GeneratedContent(
+                    self._rawGeneratedContent = Conduit.GeneratedContent(
                         kind: .structure(
                             properties: properties,
                             orderedKeys: [\(orderedKeys)]
@@ -448,7 +448,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
         if properties.isEmpty {
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public init(_ generatedContent: GeneratedContent) throws {
+                    nonisolated public init(_ generatedContent: Conduit.GeneratedContent) throws {
                         self._rawGeneratedContent = generatedContent
 
                         guard case .structure = generatedContent.kind else {
@@ -463,7 +463,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
         } else {
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public init(_ generatedContent: GeneratedContent) throws {
+                    nonisolated public init(_ generatedContent: Conduit.GeneratedContent) throws {
                         self._rawGeneratedContent = generatedContent
 
                         guard case .structure(let properties, _) = generatedContent.kind else {
@@ -615,7 +615,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                     if let value = properties["\(propertyName)"] {
                         self.\(propertyName) = try \(propertyType)(value)
                     } else {
-                        self.\(propertyName) = try \(propertyType)(GeneratedContent("{}"))
+                        self.\(propertyName) = try \(propertyType)(Conduit.GeneratedContent("{}"))
                     }
                     """
             }
@@ -635,35 +635,35 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                 let baseType = String(propType.dropLast())
                 if baseType == "String" {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { GeneratedContent($0) } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { Conduit.GeneratedContent($0) } ?? Conduit.GeneratedContent(kind: .null)"
                 } else if baseType == "Int" || baseType == "Double" || baseType == "Float"
                     || baseType == "Bool" || baseType == "Decimal"
                 {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? Conduit.GeneratedContent(kind: .null)"
                 } else if isDictionaryType(baseType) {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { $0.generatedContent } ?? Conduit.GeneratedContent(kind: .null)"
                 } else if baseType.hasPrefix("[") && baseType.hasSuffix("]") {
                     return
-                        "properties[\"\(propName)\"] = \(propName).map { GeneratedContent(elements: $0) } ?? GeneratedContent(kind: .null)"
+                        "properties[\"\(propName)\"] = \(propName).map { Conduit.GeneratedContent(elements: $0) } ?? Conduit.GeneratedContent(kind: .null)"
                 } else {
                     return """
                         if let value = \(propName) {
                                     properties["\(propName)"] = value.generatedContent
                                 } else {
-                                    properties["\(propName)"] = GeneratedContent(kind: .null)
+                                    properties["\(propName)"] = Conduit.GeneratedContent(kind: .null)
                                 }
                         """
                 }
             } else if isDictionaryType(propType) {
                 return "properties[\"\(propName)\"] = \(propName).generatedContent"
             } else if propType.hasPrefix("[") && propType.hasSuffix("]") {
-                return "properties[\"\(propName)\"] = GeneratedContent(elements: \(propName))"
+                return "properties[\"\(propName)\"] = Conduit.GeneratedContent(elements: \(propName))"
             } else {
                 switch propType {
                 case "String":
-                    return "properties[\"\(propName)\"] = GeneratedContent(\(propName))"
+                    return "properties[\"\(propName)\"] = Conduit.GeneratedContent(\(propName))"
                 case "Int", "Double", "Float", "Bool", "Decimal":
                     return "properties[\"\(propName)\"] = \(propName).generatedContent"
                 default:
@@ -677,10 +677,10 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
         if properties.isEmpty {
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public var generatedContent: GeneratedContent {
-                        let properties: [String: GeneratedContent] = [:]
+                    nonisolated public var generatedContent: Conduit.GeneratedContent {
+                        let properties: [String: Conduit.GeneratedContent] = [:]
 
-                        return GeneratedContent(
+                        return Conduit.GeneratedContent(
                             kind: .structure(
                                 properties: properties,
                                 orderedKeys: []
@@ -692,11 +692,11 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
         } else {
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public var generatedContent: GeneratedContent {
-                        var properties: [String: GeneratedContent] = [:]
+                    nonisolated public var generatedContent: Conduit.GeneratedContent {
+                        var properties: [String: Conduit.GeneratedContent] = [:]
                         \(propertyConversions)
 
-                        return GeneratedContent(
+                        return Conduit.GeneratedContent(
                             kind: .structure(
                                 properties: properties,
                                 orderedKeys: [\(orderedKeys)]
@@ -742,7 +742,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
             }
 
             return """
-                GenerationSchema.Property(
+                Conduit.GenerationSchema.Property(
                                 name: "\(prop.name)",
                                 description: \(escapedDescription),
                                 type: \(prop.type).self,
@@ -753,8 +753,8 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
         return DeclSyntax(
             stringLiteral: """
-                nonisolated public static var generationSchema: GenerationSchema {
-                    return GenerationSchema(
+                nonisolated public static var generationSchema: Conduit.GenerationSchema {
+                    return Conduit.GenerationSchema(
                         type: Self.self,
                         description: \(description.map { "\"\($0)\"" } ?? "\"Generated \(structName)\""),
                         properties: [\(properties.isEmpty ? "" : "\n            \(propertySchemas)\n        ")]
@@ -799,15 +799,15 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
         return DeclSyntax(
             stringLiteral: """
-                public struct PartiallyGenerated: Identifiable, Sendable, ConvertibleFromGeneratedContent {
-                    public var id: GenerationID
+                public struct PartiallyGenerated: Identifiable, Sendable, Conduit.ConvertibleFromGeneratedContent {
+                    public var id: Conduit.GenerationID
 
                     \(optionalProperties)
 
-                    private let rawContent: GeneratedContent
+                    private let rawContent: Conduit.GeneratedContent
 
-                    public init(_ generatedContent: GeneratedContent) throws {
-                        self.id = generatedContent.id ?? GenerationID()
+                    public init(_ generatedContent: Conduit.GeneratedContent) throws {
+                        self.id = generatedContent.id ?? Conduit.GenerationID()
                         self.rawContent = generatedContent
 
                         if \(properties.isEmpty ? "case .structure = generatedContent.kind" : "case .structure(let properties, _) = generatedContent.kind") {
@@ -817,7 +817,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                         }
                     }
 
-                    public var generatedContent: GeneratedContent {
+                    public var generatedContent: Conduit.GeneratedContent {
                         return rawContent
                     }
                 }
@@ -906,7 +906,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public init(_ generatedContent: GeneratedContent) throws {
+                    nonisolated public init(_ generatedContent: Conduit.GeneratedContent) throws {
                         do {
                             guard case .structure(let properties, _) = generatedContent.kind else {
                                 throw DecodingError.typeMismatch(
@@ -960,7 +960,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public init(_ generatedContent: GeneratedContent) throws {
+                    nonisolated public init(_ generatedContent: Conduit.GeneratedContent) throws {
                         guard case .string(let value) = generatedContent.kind else {
                             throw DecodingError.typeMismatch(
                                 \(enumName).self,
@@ -1059,7 +1059,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                 return "let \(label) = try valueProperties[\"\(label)\"]?.value(Bool.self) ?? false"
             default:
                 return
-                    "let \(label) = try \(type)(valueProperties[\"\(label)\"] ?? GeneratedContent(\"{}\"))"
+                    "let \(label) = try \(type)(valueProperties[\"\(label)\"] ?? Conduit.GeneratedContent(\"{}\"))"
             }
         }.joined(separator: "\n                    ")
 
@@ -1104,17 +1104,17 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                 if enumCase.associatedValues.isEmpty {
                     return """
                         case .\(enumCase.name):
-                            return GeneratedContent(properties: [
-                                "case": GeneratedContent("\(enumCase.name)"),
-                                "value": GeneratedContent("")
+                            return Conduit.GeneratedContent(properties: [
+                                "case": Conduit.GeneratedContent("\(enumCase.name)"),
+                                "value": Conduit.GeneratedContent("")
                             ])
                         """
                 } else if enumCase.isSingleUnlabeledValue {
                     return """
                         case .\\(enumCase.name)(let value):
-                            return GeneratedContent(properties: [
-                                "case": GeneratedContent("\\(enumCase.name)"),
-                                "value": GeneratedContent("\\\\(value)")
+                            return Conduit.GeneratedContent(properties: [
+                                "case": Conduit.GeneratedContent("\\(enumCase.name)"),
+                                "value": Conduit.GeneratedContent("\\\\(value)")
                             ])
                         """
                 } else {
@@ -1127,7 +1127,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public var generatedContent: GeneratedContent {
+                    nonisolated public var generatedContent: Conduit.GeneratedContent {
                         switch self {
                         \(switchCases)
                         }
@@ -1136,12 +1136,12 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
             )
         } else {
             let switchCases = cases.map { enumCase in
-                "case .\(enumCase.name): return GeneratedContent(\"\(enumCase.name)\")"
+                "case .\(enumCase.name): return Conduit.GeneratedContent(\"\(enumCase.name)\")"
             }.joined(separator: "\n            ")
 
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public var generatedContent: GeneratedContent {
+                    nonisolated public var generatedContent: Conduit.GeneratedContent {
                         switch self {
                         \(switchCases)
                         }
@@ -1158,16 +1158,16 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
         case "String", "Int", "Double", "Bool":
             return """
                 case .\(caseName)(let value):
-                    return GeneratedContent(properties: [
-                        "case": GeneratedContent("\(caseName)"),
-                        "value": GeneratedContent("\\(value)")
+                    return Conduit.GeneratedContent(properties: [
+                        "case": Conduit.GeneratedContent("\(caseName)"),
+                        "value": Conduit.GeneratedContent("\\(value)")
                     ])
                 """
         default:
             return """
                 case .\(caseName)(let value):
-                    return GeneratedContent(properties: [
-                        "case": GeneratedContent("\(caseName)"),
+                    return Conduit.GeneratedContent(properties: [
+                        "case": Conduit.GeneratedContent("\(caseName)"),
                         "value": value.generatedContent
                     ])
                 """
@@ -1189,7 +1189,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
             switch type {
             case "String", "Int", "Double", "Bool":
-                return "\"\(label)\": GeneratedContent(\"\\(\(label))\")"
+                return "\"\(label)\": Conduit.GeneratedContent(\"\\(\(label))\")"
             default:
                 return "\"\(label)\": \(label).generatedContent"
             }
@@ -1197,9 +1197,9 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
         return """
             case .\(caseName)(\(parameterList)):
-                return GeneratedContent(properties: [
-                    "case": GeneratedContent("\(caseName)"),
-                    "value": GeneratedContent(properties: [
+                return Conduit.GeneratedContent(properties: [
+                    "case": Conduit.GeneratedContent("\(caseName)"),
+                    "value": Conduit.GeneratedContent(properties: [
                         \(propertyMappings)
                     ])
                 ])
@@ -1209,7 +1209,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
     private static func generateEnumFromGeneratedContentMethod(enumName: String) -> DeclSyntax {
         return DeclSyntax(
             stringLiteral: """
-                public static func from(generatedContent: GeneratedContent) throws -> \(enumName) {
+                public static func from(generatedContent: Conduit.GeneratedContent) throws -> \(enumName) {
                     return try \(enumName)(generatedContent)
                 }
                 """
@@ -1226,7 +1226,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
         if hasAnyAssociatedValues {
 
             let caseProperty = """
-                GenerationSchema.Property(
+                Conduit.GenerationSchema.Property(
                                         name: "case",
                                         description: "Enum case identifier",
                                         type: String.self,
@@ -1234,7 +1234,7 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
                                     )
                 """
             let valueProperty = """
-                GenerationSchema.Property(
+                Conduit.GenerationSchema.Property(
                                         name: "value",
                                         description: "Associated value data",
                                         type: String.self,
@@ -1244,8 +1244,8 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public static var generationSchema: GenerationSchema {
-                        return GenerationSchema(
+                    nonisolated public static var generationSchema: Conduit.GenerationSchema {
+                        return Conduit.GenerationSchema(
                             type: Self.self,
                             description: \(description.map { "\"\($0)\"" } ?? "\"Generated \(enumName)\""),
                             properties: [
@@ -1261,8 +1261,8 @@ public struct GenerableMacro: MemberMacro, ExtensionMacro {
 
             return DeclSyntax(
                 stringLiteral: """
-                    nonisolated public static var generationSchema: GenerationSchema {
-                        return GenerationSchema(
+                    nonisolated public static var generationSchema: Conduit.GenerationSchema {
+                        return Conduit.GenerationSchema(
                             type: Self.self,
                             description: \(description.map { "\"\($0)\"" } ?? "\"Generated \(enumName)\""),
                             anyOf: [\(caseNames)]
