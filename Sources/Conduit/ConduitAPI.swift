@@ -212,7 +212,7 @@ public struct Provider: Sendable {
     }
     #endif
 
-    #if CONDUIT_TRAIT_MLX
+    #if CONDUIT_TRAIT_MLX && canImport(MLX)
     /// Facade options for MLX local inference.
     public struct MLXOptions: Sendable, Hashable {
         public var memoryLimit: ByteCount?
@@ -299,7 +299,7 @@ public struct Provider: Sendable {
 extension Provider {
     // MARK: - Local (Primary)
 
-    #if CONDUIT_TRAIT_MLX
+    #if CONDUIT_TRAIT_MLX && canImport(MLX)
     public static func mlx(
         configure: (inout MLXOptions) -> Void = { _ in }
     ) -> Self {
