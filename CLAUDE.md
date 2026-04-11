@@ -297,11 +297,8 @@ cancellation via `cancel()`, and an opt-in `WarmupConfig` (`.default` or
 
 - `main` is the integration branch. Feature branches follow names like
   `feature/*`, `fix-*`, or `claude/*` for AI-driven work.
-- This file (`CLAUDE.md`) is listed in `.gitignore` under the
-  "Claude Code - ignore completely" section. If you are committing an update
-  to it, you will need `git add -f CLAUDE.md`, and you should double-check
-  with the user that committing the file is intended (see `AGENTS.md` rule on
-  planning docs).
+- `CLAUDE.md` is tracked in the repo (the `.claude/` directory is still
+  gitignored). Updates to this file should be committed normally.
 - Never commit secrets. Cloud provider tests read keys from environment
   variables (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY`,
   `MOONSHOT_API_KEY`, `MINIMAX_API_KEY`, `HF_TOKEN`) and skip when absent.
