@@ -60,7 +60,7 @@ Conduit is tuned for Apple Silicon and local model throughput. The chart below s
 
 ---
 
-## Quick Start
+## Start Here
 
 The default path is intentionally small:
 
